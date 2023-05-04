@@ -1,0 +1,9 @@
+.idea
+.vs
+.vsconfig
+
+/Binaries
+/Saved
+/DerivedDataCache
+/Intermediate
+/Content/MedievalDungeon/*

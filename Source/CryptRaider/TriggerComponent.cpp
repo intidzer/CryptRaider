@@ -9,8 +9,9 @@
 UTriggerComponent::UTriggerComponent()
 {
 	// Set bCanEverTick = true if you want this Component to tick
-	PrimaryComponentTick.bCanEverTick = false;
+	PrimaryComponentTick.bCanEverTick = true;
 	OnComponentBeginOverlap.AddDynamic(this, &UTriggerComponent::OnCollisionStart);
+	OnComponentEndOverlap.AddDynamic(this, &UTriggerComponent::OnCollisionEnd);
 }
 
 void UTriggerComponent::BeginPlay()
@@ -22,21 +23,42 @@ void UTriggerComponent::BeginPlay()
 void UTriggerComponent::TickComponent(float DeltaTime, ELevelTick TickType,	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
+	if (IsValid(OverlappingActor))
+	{
+		HandleOverlapping(OverlappingActor, this);
+	}
 }
 
 void UTriggerComponent::OnCollisionStart(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit)
 {
+	HandleOverlapping(OtherActor, OtherComponent);
+}
+
+void UTriggerComponent::OnCollisionEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex)
+{
+	OverlappingActor = nullptr;
+}
+
+void UTriggerComponent::HandleOverlapping(AActor* OtherActor, UPrimitiveComponent* OtherComponent)
+{
 	for (auto& Tag : OtherActor->Tags)
 		UE_LOG(LogTemp, Display, TEXT("TAG %s"), *Tag.ToString())
+	
 	UE_LOG(LogTemp, Display, TEXT("BlockingTag TAG %s"), *BlockingTag.ToString())
 	UE_LOG(LogTemp, Display, TEXT("UnlockTag TAG %s"), *UnlockTag.ToString())
 	
-	if (OtherActor->ActorHasTag(UnlockTag) && !OtherActor->ActorHasTag(BlockingTag))
+	if (OtherActor->ActorHasTag(UnlockTag))
 	{
+		OverlappingActor = OtherActor;
+
+		if(OtherActor->ActorHasTag(BlockingTag))
+			return;
+		
 		UE_LOG(LogTemp, Display, TEXT("Unlocking the Gate with: %s"), *OtherActor->GetActorNameOrLabel())
 		if (auto* MoverComponent = GetOwner()->FindComponentByClass<UMover>())
 		{
-			OtherComponent->SetSimulatePhysics(false);
+			OtherActor->DisableComponentsSimulatePhysics();
 			OtherActor->AttachToComponent(this, FAttachmentTransformRules::KeepWorldTransform);
 			
 			MoverComponent->StartMovement();
@@ -45,5 +67,6 @@ void UTriggerComponent::OnCollisionStart(UPrimitiveComponent* OverlappedComponen
 		{
 			UE_LOG(LogTemp, Error, TEXT("Mover Component is not set for Actor %s"), *GetOwner()->GetFName().ToString())
 		}
+		OverlappingActor = nullptr;
 	}
 }

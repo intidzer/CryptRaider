@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BlueprintEditor.h"
 #include "Components/BoxComponent.h"
 #include "TriggerComponent.generated.h"
 
@@ -22,7 +23,19 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
 	UFUNCTION()
-	void OnCollisionStart(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit);
+	void OnCollisionStart(UPrimitiveComponent* OverlappedComponent,
+						AActor* OtherActor,
+						UPrimitiveComponent* OtherComponent,
+						int32 OtherBodyIndex,
+						bool bFromSweep,
+						const FHitResult& Hit);
+
+	UFUNCTION()
+	void OnCollisionEnd(UPrimitiveComponent* OverlappedComponent,
+						AActor* OtherActor,
+	                    UPrimitiveComponent* OtherComponent,
+	                    int32 OtherBodyIndex);
+	void HandleOverlapping(AActor* OtherActor, UPrimitiveComponent* OtherComponent);
 
 protected:
 	// Called when the game starts
@@ -36,4 +49,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	FName BlockingTag;
 
+	UPROPERTY()
+	AActor* OverlappingActor;
 };

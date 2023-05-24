@@ -10,63 +10,53 @@ UTriggerComponent::UTriggerComponent()
 {
 	// Set bCanEverTick = true if you want this Component to tick
 	PrimaryComponentTick.bCanEverTick = true;
-	OnComponentBeginOverlap.AddDynamic(this, &UTriggerComponent::OnCollisionStart);
-	OnComponentEndOverlap.AddDynamic(this, &UTriggerComponent::OnCollisionEnd);
 }
 
 void UTriggerComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	UE_LOG(LogTemp, Display, TEXT("Trigger component BeginPlay"))
+	SetMover(GetOwner()->FindComponentByClass<UMover>());
 }
 
 void UTriggerComponent::TickComponent(float DeltaTime, ELevelTick TickType,	FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	if (IsValid(OverlappingActor))
+	if (!IsValid(Mover))
 	{
-		HandleOverlapping(OverlappingActor, this);
+		UE_LOG(LogTemp, Error, TEXT("Mover Component is not set for Actor %s"), *GetOwner()->GetFName().ToString())
+		return;
 	}
-}
-
-void UTriggerComponent::OnCollisionStart(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& Hit)
-{
-	HandleOverlapping(OtherActor, OtherComponent);
-}
-
-void UTriggerComponent::OnCollisionEnd(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComponent, int32 OtherBodyIndex)
-{
-	OverlappingActor = nullptr;
-}
-
-void UTriggerComponent::HandleOverlapping(AActor* OtherActor, UPrimitiveComponent* OtherComponent)
-{
-	for (auto& Tag : OtherActor->Tags)
-		UE_LOG(LogTemp, Display, TEXT("TAG %s"), *Tag.ToString())
 	
-	UE_LOG(LogTemp, Display, TEXT("BlockingTag TAG %s"), *BlockingTag.ToString())
-	UE_LOG(LogTemp, Display, TEXT("UnlockTag TAG %s"), *UnlockTag.ToString())
-	
-	if (OtherActor->ActorHasTag(UnlockTag))
+	if (AActor* Actor = GetAcceptableActor(); IsValid(Actor))
 	{
-		OverlappingActor = OtherActor;
-
-		if(OtherActor->ActorHasTag(BlockingTag))
-			return;
+		UE_LOG(LogTemp, Display, TEXT("Unlocking the Gate with: %s"), *Actor->GetActorNameOrLabel())
+		{
+			if (UPrimitiveComponent* Component = Cast<UPrimitiveComponent>(Actor->GetRootComponent()))
+				Component->SetSimulatePhysics(false);
+			Actor->AttachToComponent(this, FAttachmentTransformRules::KeepWorldTransform);
+	
+			Mover->SetShouldMove(true);
+		}
+	}
+	else
+	{
+		Mover->SetShouldMove(false);
+	}
 		
-		UE_LOG(LogTemp, Display, TEXT("Unlocking the Gate with: %s"), *OtherActor->GetActorNameOrLabel())
-		if (auto* MoverComponent = GetOwner()->FindComponentByClass<UMover>())
-		{
-			OtherActor->DisableComponentsSimulatePhysics();
-			OtherActor->AttachToComponent(this, FAttachmentTransformRules::KeepWorldTransform);
-			
-			MoverComponent->StartMovement();
-		}
-		else
-		{
-			UE_LOG(LogTemp, Error, TEXT("Mover Component is not set for Actor %s"), *GetOwner()->GetFName().ToString())
-		}
-		OverlappingActor = nullptr;
-	}
+}
+
+AActor* UTriggerComponent::GetAcceptableActor() const
+{
+	TArray<AActor*> Actors;
+	GetOverlappingActors(Actors);
+	for (AActor* Actor : Actors)
+		if (Actor->ActorHasTag(UnlockTag) && !Actor->ActorHasTag(BlockingTag))
+			return Actor;
+	return nullptr;
+}
+
+void UTriggerComponent::SetMover(UMover* NewMoverComponent)
+{
+	Mover = NewMoverComponent;
 }

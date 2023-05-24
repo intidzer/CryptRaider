@@ -8,7 +8,6 @@
 #include "EnhancedInputComponent.h"
 #include "GameFramework/Character.h"
 
-// Sets default values for this component's properties
 UGrabber::UGrabber()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
@@ -34,14 +33,6 @@ void UGrabber::BeginPlay()
 					EnhancedInputComponent->BindAction(GrabAction, ETriggerEvent::Completed, this, &UGrabber::Release);
 				}
 }
-
-
-// Called every frame
-void UGrabber::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
-{
-	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-}
-
 
 void UGrabber::Grab()
 {
@@ -74,6 +65,8 @@ void UGrabber::HoldItem(UPhysicsHandleComponent* PhysicsHandleComponent, const F
 {
 	UPrimitiveComponent* HitComponent = HitResult.GetComponent();
 	HitComponent->WakeAllRigidBodies();
+	HitComponent->SetSimulatePhysics(true);
+	HitComponent->DetachFromComponent(FDetachmentTransformRules::KeepWorldTransform);
 
 	if (Released)
 	{

@@ -25,10 +25,6 @@ public:
 
 	UPhysicsHandleComponent* GetPhysicsHandleComponent() const;
 
-	// Called every frame
-	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-
 	/** Grab Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputAction* GrabAction;

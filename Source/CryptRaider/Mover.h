@@ -24,7 +24,8 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	void StartMovement() { ShouldMove = true; }
+	UFUNCTION(BlueprintCallable)
+	void SetShouldMove(const bool NewShouldMove) { ShouldMove = NewShouldMove; }
 
 private:
 	UPROPERTY(EditAnywhere)

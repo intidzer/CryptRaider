@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "BlueprintEditor.h"
+#include "Mover.h"
 #include "Components/BoxComponent.h"
 #include "TriggerComponent.generated.h"
 
@@ -22,20 +23,10 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
-	UFUNCTION()
-	void OnCollisionStart(UPrimitiveComponent* OverlappedComponent,
-						AActor* OtherActor,
-						UPrimitiveComponent* OtherComponent,
-						int32 OtherBodyIndex,
-						bool bFromSweep,
-						const FHitResult& Hit);
+	AActor* GetAcceptableActor() const;
 
-	UFUNCTION()
-	void OnCollisionEnd(UPrimitiveComponent* OverlappedComponent,
-						AActor* OtherActor,
-	                    UPrimitiveComponent* OtherComponent,
-	                    int32 OtherBodyIndex);
-	void HandleOverlapping(AActor* OtherActor, UPrimitiveComponent* OtherComponent);
+	UFUNCTION(BlueprintCallable)
+	void SetMover(UMover* MoverComponent);
 
 protected:
 	// Called when the game starts
@@ -43,12 +34,21 @@ protected:
 
 private:
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere,Category="Trigger Component|Tags")
 	FName UnlockTag;
 	
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere,Category="Trigger Component|Tags")
 	FName BlockingTag;
 
+	UPROPERTY(EditAnywhere,Category="Trigger Component|Mass")
+	bool IsPressurePlate;
+	
+	UPROPERTY(EditAnywhere,Category="Trigger Component|Mass")
+	float Mass;
+	
+	UPROPERTY(EditAnywhere,Category="Trigger Component|Mass")
+	float MassDelta;
+
 	UPROPERTY()
-	AActor* OverlappingActor;
+	UMover* Mover;
 };
